@@ -5,5 +5,9 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  # Your application server logic
+  parentsession <- session
+  dataobject <- shiny::reactiveValues()
+  dataobject$calr_headers <- readRDS(here::here("data/calr_headers.rds"))
+  mod_welcome_server("welcome_1", parentsession)
+  mod_outlier_server("outlier_1", parentsession, dataobject)
 }

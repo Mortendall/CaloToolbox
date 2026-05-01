@@ -1,17 +1,28 @@
 Package: CaloToolbox
-Title: An Amazing Shiny App
+Title: Tools for indirect calorimetry analysis with CalR
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "firstname",
-           family = "lastname",
-           role = c("aut", "cre"),
-           email = "your@email.com")
-Description: What the package does (one paragraph).
+    person("Morten", "Dall", , "mortendall1988@gmail.com", role = c("aut", "cre"))
+Description: This app is a collection of tools that supplements the
+  online tool CalR that assists the user in indirect calorimetry. This is meant
+  as a supplement rather than a replacement
 License: What license is it under?
 Imports: 
+    bsicons,
+    bslib,
     config,
+    dplyr,
+    duckplyr,
+    ggplot2,
     golem,
-    shiny
+    here,
+    plotly,
+    readxl,
+    reshape2,
+    shiny,
+    shinyWidgets
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.3
+URL: https://github.com/Mortendall/CaloToolbox
+BugReports: https://github.com/Mortendall/CaloToolbox/issues

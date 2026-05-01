@@ -105,3 +105,31 @@ long_sable <- long_sable |>
 
 return(long_sable)
 }
+
+#' Group assigner
+#'
+#' @param session_file a calR session file
+#'
+#' @returns a data frame showing group distribution
+
+group_assigner <- function(session_file){
+  #detect how many groups we have
+  group_vector <- stringr::str_subset(colnames(session_file),
+                                      pattern = "group[:digit:]+")
+  #extract group names
+  group_names <- session_file |>
+    dplyr::filter(!is.na(group_names)) |>
+    dplyr::pull(group_names)
+
+  #replace group names and make group overview
+  group_info <- session_file |>
+    dplyr::select(group_vector) |>
+    magrittr::set_colnames(group_names) |>
+    tidyr::pivot_longer(cols = tidyselect::everything(),
+                        values_to = "subject.id",
+                        names_to = "group") |>
+    dplyr::filter(!is.na(subject.id))
+  return(group_info)
+}
+
+

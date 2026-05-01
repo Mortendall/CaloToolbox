@@ -104,11 +104,39 @@ mod_outlier_server <- function(id, parentsession, dataobject){
         accept = ".csv"
       )
     })
+
+    #recognize upload of session file
+    shiny::observeEvent(
+      input$session_upload,{
+        ext <- tools::file_ext(input$session_upload)
+        ext <- tolower(ext)
+        req(file)
+        validate(need(ext == "csv",
+                      "Please upload an csv file"))
+
+
+        session_file<- vroom::vroom(input$session_upload$datapath,
+                                 show_col_types = F)
+
+        #check csv is right format
+        if(all(c("group_names", "diet_names","dietCal") %in% colnames(session_file))){
+
+          #save session file
+          dataobject$session <- session_file
+
+          #add groups
+          dataobject$group_info <- group_assigner(session_file)
+          shiny::showNotification("Session file succesfully uploaded")
+        }
+        else{
+          shinyWidgets::sendSweetAlert(
+            title = "Error in upload",
+            text = "Uploaded file has wrong headers - are you sure you
+                    uploaded the right file?",
+            type = "error"
+          )
+        }
+
+      })
   })
 }
-
-## To be copied in the UI
-# mod_outlier_ui("outlier_1")
-
-## To be copied in the server
-# mod_outlier_server("outlier_1")

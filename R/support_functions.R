@@ -149,7 +149,7 @@ sem <- function(x){
 #' @param calr a calR file in the calR format
 #' @param session a session file
 #' @param group_info a dataframe containing info on group distributions
-#' @resolution calculated resolution of the dataset
+#' @param resolution calculated resolution of the dataset
 #'
 #' @returns mean and SEM for various parameters
 
@@ -286,4 +286,28 @@ pull_colors <- function(session_file){
 
 
   return(color_list)
+}
+
+
+#' XY plotter
+#'
+#' @param summary_calr a calr summary object
+#' @param color_key a dataframe with group names and color
+#'
+#' @returns a plotly object
+
+xy_plotter <- function(summary_calr, color_key){
+  xy_plot <- ggplot2::ggplot(summary_calr,
+                             ggplot2::aes(
+                               x = Total.Mass,
+                               y = ee_mean,
+                               color = group
+                             ))+
+    ggplot2::geom_point(size = 8)+
+    ggplot2::scale_color_manual(values = color_key$colors)+
+    ggplot2::theme_bw()
+
+  xy_plot <- plotly::ggplotly(xy_plot)
+
+  return(xy_plot)
 }

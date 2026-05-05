@@ -197,18 +197,9 @@ mod_outlier_server <- function(id, parentsession, dataobject){
     })
 
      output$xy_plot <- plotly::renderPlotly({
-
-       xy_plot <- ggplot2::ggplot(summary_calr,
-                                  ggplot2::aes(
-                                    x = Total.Mass,
-                                    y = ee_mean,
-                                    color = group
-                                  ))+
-         ggplot2::geom_point(size = 8)+
-         ggplot2::scale_color_manual(values = dataobject$color_key$colors)+
-         ggplot2::theme_bw()
-
-       xy_plot <- plotly::ggplotly(xy_plot)
+       req(dataobject$summary)
+       xy_plot <- xy_plotter(summary_calr = dataobject$summary,
+                             color_key = dataobject$color_key)
 
      })
 

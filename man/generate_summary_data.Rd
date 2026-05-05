@@ -12,6 +12,8 @@ generate_summary_data(calr, session, group_info, resolution)
 \item{session}{a session file}
 
 \item{group_info}{a dataframe containing info on group distributions}
+
+\item{resolution}{calculated resolution of the dataset}
 }
 \value{
 mean and SEM for various parameters

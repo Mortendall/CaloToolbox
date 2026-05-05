@@ -255,3 +255,35 @@ calculate_res <- function(data_set){
   res <- as.numeric(res)
   return(res)
 }
+
+#' Pull colors from session file
+#'
+#' @param session_file from calR
+#'
+#' @returns a data frame with group name and colors from calR
+pull_colors <- function(session_file){
+  #get the colors
+  color_list <- session_file |>
+    dplyr::select(group_names, colors)
+
+  #save group_names
+  group_vector <- color_list |>
+    dplyr::filter(!is.na(group_names)) |>
+    dplyr::pull(group_names)
+
+  #check there are individuals in all groups
+
+  group_info <- session_file |>
+    dplyr::select(dplyr::all_of(
+      stringr::str_subset(colnames(session_file),
+                          pattern = "group[:digit:]+"))) |>
+    magrittr::set_colnames(group_vector) |>
+    dplyr::select(
+      dplyr::where(~sum(!is.na(.)) > 0))
+
+  color_list <- color_list |>
+    dplyr::filter(group_names %in% colnames(group_info))
+
+
+  return(color_list)
+}

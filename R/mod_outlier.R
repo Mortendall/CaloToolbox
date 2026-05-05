@@ -182,6 +182,8 @@ mod_outlier_server <- function(id, parentsession, dataobject){
     #####visualize XY plot####
     output$xy_ui <- shiny::renderUI({
       req(dataobject$summary)
+      dataobject$color_key <- pull_colors(dataobject$session)
+
       shiny::tagList(
         shiny::selectInput(
           inputId = ns("select_parameter"),
@@ -194,13 +196,21 @@ mod_outlier_server <- function(id, parentsession, dataobject){
 
     })
 
-    # output$xy_plot <- plotly::renderPlotly({
-    #   plotly::plot_ly(
-    #     data = dataobject$summary,
-    #     x = ~Total.Mass,
-    #     y = ~
-    #   )
-    # })
+     output$xy_plot <- plotly::renderPlotly({
+
+       xy_plot <- ggplot2::ggplot(summary_calr,
+                                  ggplot2::aes(
+                                    x = Total.Mass,
+                                    y = ee_mean,
+                                    color = group
+                                  ))+
+         ggplot2::geom_point(size = 8)+
+         ggplot2::scale_color_manual(values = dataobject$color_key$colors)+
+         ggplot2::theme_bw()
+
+       xy_plot <- plotly::ggplotly(xy_plot)
+
+     })
 
 
   })

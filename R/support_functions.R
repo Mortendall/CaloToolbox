@@ -123,13 +123,135 @@ group_assigner <- function(session_file){
 
   #replace group names and make group overview
   group_info <- session_file |>
-    dplyr::select(group_vector) |>
+    dplyr::select(as.character(group_vector)) |>
     magrittr::set_colnames(group_names) |>
     tidyr::pivot_longer(cols = tidyselect::everything(),
                         values_to = "subject.id",
                         names_to = "group") |>
-    dplyr::filter(!is.na(subject.id))
+    dplyr::filter(!is.na(subject.id)) |>
+    dplyr::mutate(subject.id= as.character(subject.id))
   return(group_info)
 }
 
+#' SEM calculator
+#'
+#' @param x a vector of values
+#'
+#' @returns calculated SEM
 
+sem <- function(x){
+  sem_value <- sd(x, na.rm = TRUE) / sqrt(length(!is.na(x)))
+  return(sem_value)
+}
+
+#' Generate summary info
+#'
+#' @param calr a calR file in the calR format
+#' @param session a session file
+#' @param group_info a dataframe containing info on group distributions
+#' @resolution calculated resolution of the dataset
+#'
+#' @returns mean and SEM for various parameters
+
+generate_summary_data <- function(calr, session, group_info, resolution){
+  #remove ..1 col if it is there
+
+  if("..1" %in% colnames(calr)){
+    calr <- calr |>
+      dplyr::select(-"..1")
+  }
+
+  calr_trimmed <- calr |>
+    dplyr::select(-c('cage', 'xyamb', 'wheel', 'wheel.acc', 'day', 'hour',"C13","body.temp")) |>
+    dplyr::mutate(subject.id = as.character(subject.id)) |>
+    dplyr::left_join(group_info) |>
+    #change to character if group is numeric
+    dplyr::mutate(group = as.character(group)) |>
+    dplyr::filter(exp.hour>= session$xrange[1] & exp.hour<session$xrange[2]+1,
+                  #filter FI events above 100 mg/min
+                  feed < 0.1 * resolution
+                  ) |>
+    #re-zero cumulative factors
+    dplyr::group_by(subject.id) |>
+    dplyr::mutate(
+      allmeter = allmeter - dplyr::first(x = allmeter),
+      exp.hour = exp.hour - dplyr::first(x = exp.hour),
+      feed.acc = feed.acc - dplyr::first(x = feed.acc),
+      drink.acc = drink.acc - dplyr::first(x = drink.acc),
+      pedmeter = pedmeter - dplyr::first(x = pedmeter),
+      exp.minute = exp.minute - dplyr::first(x = exp.minute))
+
+  #make table of caloric content of food
+
+  food_table <- session |>
+    dplyr::select(group_names, dietCal) |>
+    dplyr::mutate(group_names = as.character(group_names))
+
+  #add food_table and adjust feed values
+
+  ## DOUBLE CHECK THIS, THIS IS NOT RETURNING WHAT CALR IS RETURNING
+  calr_trimmed <- calr_trimmed |>
+    dplyr::left_join(food_table,
+                     by = c("group"="group_names")) |>
+    dplyr::mutate(
+                  eb = (feed * dietCal) - ee/ (60/resolution),
+                  eb.acc = cumsum(eb),
+                  #convert feed grom g to kcal
+                  feed = feed * dietCal,
+                  feed.acc = cumsum(feed))|>
+    dplyr::ungroup()
+
+  #columns to use for calculations
+  columns_to_use <- c("vo2","vco2","ee","ee.acc", "eb", "eb.acc", "rer","feed","feed.acc","drink","drink.acc","xytot",
+                      "pedmeter","allmeter","enviro.light","enviro.temp")
+  #overall group means and sem
+  summary_calr <- calr_trimmed |>
+    dplyr::group_by(subject.id) |>
+    dplyr::reframe(
+      dplyr::across(
+        tidyr::all_of(columns_to_use),
+        list(mean = ~mean(.x,
+                          na.rm = TRUE),
+             sem  = ~sem(.x)),
+        .names = "{.col}_{.fn}"
+      )) |>
+    unique()
+
+  #convert eb and food from kcal/interval to kcal/h
+
+  summary_calr <- summary_calr |>
+    dplyr::mutate(
+      #convert from kcal/phase to kcal/h
+      eb_mean = eb_mean * (60/resolution),
+      eb.acc_mean = eb.acc_mean * (60/resolution),
+      eb_sem = eb_sem * (60/resolution),
+      eb.acc_sem  = eb.acc_sem * (60/resolution),
+      feed_mean = feed_mean * (60/resolution),
+      feed.acc_mean = feed.acc_mean * (60/resolution),
+      feed_sem = feed_sem * (60/resolution),
+      feed.acc_sem  = feed.acc_sem * (60/resolution)
+    )
+
+  #add total mass and group info
+  mass_frame <- session |>
+    dplyr::select(Total.Mass, id) |>
+    dplyr::mutate(id= as.character(id))
+
+  summary_calr <- summary_calr |>
+    dplyr::left_join(mass_frame,
+                     by = c("subject.id"="id")) |>
+    dplyr::left_join(group_info)
+}
+
+
+#' calculate resolution
+#'
+#' @param data_set
+#'
+#' @returns calculated resolution
+
+calculate_res <- function(data_set){
+  res <- lubridate::minute(data_set$Date.Time[2])-lubridate::minute(data_set$Date.Time[1])
+  res <- as.numeric(res)
+  return(res)
+}

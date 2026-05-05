@@ -16,7 +16,7 @@ mod_outlier_ui <- function(id) {
         12,
         bslib::card(
           bslib::card_header(
-            ""
+            "Upload CalR- and session file"
           ),
           bslib::card_body(
             shiny::fileInput(
@@ -27,6 +27,9 @@ mod_outlier_ui <- function(id) {
             ),
             shiny::uiOutput(
               outputId = ns("session")
+            ),
+            shiny::uiOutput(
+              outputId = ns("process")
             )
           )
         )
@@ -34,11 +37,16 @@ mod_outlier_ui <- function(id) {
       shiny::column(
         12,
         bslib::navset_card_tab(
-              title = "QC plots",
+              title = "",
               full_screen = T,
               bslib::nav_panel(
                 "Model evaluation plots",
                 bslib::card_title("QC plot"),
+                bslib::card_body(
+                  shiny::uiOutput(
+                    outputId = ns("xy_ui")
+                  )
+                )
               )
 
           )
@@ -55,6 +63,7 @@ mod_outlier_server <- function(id, parentsession, dataobject){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    #####CalR upload####
     #register a calR file is uploaded
     shiny::observeEvent(
       input$calr_file,{
@@ -73,12 +82,18 @@ mod_outlier_server <- function(id, parentsession, dataobject){
           processed_data <- convert_to_calr(calr_file = raw_data,
                                             calr_headers = dataobject$calr_headers)
           dataobject$calr <- processed_data
+
+          #determine resolution
+          dataobject$res <-as.numeric(processed_data$Date.Time[2]-processed_data$Date.Time[1])
           shiny::showNotification(
             "Data succesfully uploaded and converted to CalR format")
         }
 
         else if("Date.Time"%in% colnames(raw_data)){
           dataobject$calr <- raw_data
+          #determine resolution
+          dataobject$res <-as.numeric(raw_data$Date.Time[2]-raw_data$Date.Time[1])
+
           shiny::showNotification(
             "Data succesfully uploaded. Data recognized as CalR format")
         }
@@ -105,6 +120,7 @@ mod_outlier_server <- function(id, parentsession, dataobject){
       )
     })
 
+    #####Session file upload####
     #recognize upload of session file
     shiny::observeEvent(
       input$session_upload,{
@@ -138,5 +154,54 @@ mod_outlier_server <- function(id, parentsession, dataobject){
         }
 
       })
+
+    #####process calR file####
+
+    #show button for processing once files are uploaded
+    output$process <- shiny::renderUI({
+      req(dataobject$calr)
+      req(dataobject$session)
+      shinyWidgets::actionBttn(
+        inputId = ns("process_start"),
+        label = "make QC plot",
+        style = "jelly"
+      )
+    })
+
+    #summarize data
+    shiny::observeEvent(
+      input$process_start,{
+        res <- calculate_res(dataobject$calr)
+        dataobject$summary <- generate_summary_data(dataobject$calr,
+                                                    dataobject$session,
+                                                    dataobject$group_info,
+                                                    res)
+      }
+    )
+
+    #####visualize XY plot####
+    output$xy_ui <- shiny::renderUI({
+      req(dataobject$summary)
+      shiny::tagList(
+        shiny::selectInput(
+          inputId = ns("select_parameter"),
+          label = "Select parameter for plots",
+          choices = c("energy expenditure")),
+        plotly::plotlyOutput(
+          outputId = ns("xy_plot")
+        )
+      )
+
+    })
+
+    # output$xy_plot <- plotly::renderPlotly({
+    #   plotly::plot_ly(
+    #     data = dataobject$summary,
+    #     x = ~Total.Mass,
+    #     y = ~
+    #   )
+    # })
+
+
   })
 }

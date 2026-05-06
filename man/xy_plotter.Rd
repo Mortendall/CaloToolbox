@@ -4,12 +4,16 @@
 \alias{xy_plotter}
 \title{XY plotter}
 \usage{
-xy_plotter(summary_calr, color_key)
+xy_plotter(summary_calr, color_key, plot_parameter, y_text)
 }
 \arguments{
 \item{summary_calr}{a calr summary object}
 
 \item{color_key}{a dataframe with group names and color}
+
+\item{plot_parameter}{what parameter to display}
+
+\item{y_text}{text on y-axis}
 }
 \value{
 a plotly object

@@ -4,10 +4,10 @@
 \alias{generate_summary_data}
 \title{Generate summary info}
 \usage{
-generate_summary_data(calr, session, group_info, resolution)
+generate_summary_data(calr_trimmed, session, group_info, resolution)
 }
 \arguments{
-\item{calr}{a calR file in the calR format}
+\item{calr_trimmed}{a trimmed calR file}
 
 \item{session}{a session file}
 

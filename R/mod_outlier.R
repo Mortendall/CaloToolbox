@@ -204,6 +204,17 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           ),
           selected = "energy expenditure",
           options = list(dropdownParent = 'body')
+        ),
+        shiny::selectizeInput(
+          inputId = ns("select_individual"),
+          label = "select individual to exclude",
+          choices = dataobject$summary$subject.id,
+          options = list(dropdownParent = 'body')
+        ),
+        shinyWidgets::actionBttn(
+          inputId = ns("exclude_individual"),
+          style = "jelly",
+          label = "exclude"
         )
       )
     })
@@ -253,17 +264,6 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
         # display plot
         plotly::plotlyOutput(
           outputId = ns("xy_plot")
-        ),
-        shiny::selectizeInput(
-          inputId = ns("select_individual"),
-          label = "select individual to exclude",
-          choices = dataobject$summary$subject.id,
-          options = list(dropdownParent = 'body')
-        ),
-        shinyWidgets::actionBttn(
-          inputId = ns("exclude_individual"),
-          style = "jelly",
-          label = "exclude"
         )
       )
     })
@@ -357,13 +357,121 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           color_list = dataobject$color_key
         )
       }
+    })
 
-      # ggplot2::ggplot(
-      #   dataobject$summary,
-      #   ggplot2::aes(
-      #     x =
-      #   )
-      # )
+    output$mass_change <- shiny::renderUI({
+      req(dataobject$summary)
+      plotly::plotlyOutput(
+        outputId = ns("mass_change_plot")
+      )
+    })
+    #####Mass change plot####
+    output$mass_change_plot <- plotly::renderPlotly({
+      mass_change_graph <- ggplot2::ggplot(
+        dataobject$summary,
+        ggplot2::aes(
+          x = mass.change,
+          y = eb_mean,
+          color = group
+        )
+      )+
+        ggplot2::geom_point(
+          size = 6,
+          ggplot2::aes(text = subject.id)
+        )+
+        ggplot2::theme_bw()+
+        ggplot2::xlab("Mass Change")+
+        ggplot2::ylab("Energy Balance")+
+        ggplot2::scale_color_manual(values = dataobject$color_key$colors)
+
+    })
+
+    #####Outlier test####
+    output$outlier_test <- shiny::renderUI({
+      req(dataobject$summary)
+      shiny::tagList(
+        #make button to run outlier analysis.
+        shinyWidgets::actionBttn(
+          inputId = ns("outlier_run"),
+          label = "Run outlier test for select variable",
+          style = "jelly"
+        ),
+        #show result of outlier test
+        shiny::uiOutput(
+          outputId = ns("outliertest")
+        )
+      )
+    })
+
+    shiny::observeEvent(
+      input$outlier_run,{
+        model_string <- generate_formula(input$select_parameter)
+        dataobject$model <- lm(data = dataobject$summary,
+                               formula = model_string)
+        names(dataobject$model$residuals)<- dataobject$summary$subject.id
+      }
+    )
+
+    #render UI of model data
+
+    output$outliertest <- shiny::renderUI({
+      req(dataobject$model)
+      shiny::tagList(
+          shiny::uiOutput(
+            outputId = ns("residual_test")
+          ),
+          shiny::plotOutput(
+            outputId = ns("model_plots")
+          )
+        )
+    })
+
+    #calculate residuals and render problematic ones
+    output$residual_test <- shiny::renderUI({
+      dataobject$residuals <- stats::rstandard(dataobject$model)
+      if(length(which(abs(dataobject$residuals) > 3))==0){
+        shiny::textOutput(
+          outputId = ns("no_residuals"))
+      }
+      else{
+        shiny::tagList(
+          shiny::textOutput(
+          outputId = ns("residual_text")
+        ),
+        shiny::tableOutput(
+          outputId = ns("residual_table")
+        ))
+      }
+    })
+
+    output$residual_text <- shiny::renderText({
+      "The following individuals have absolute
+      standardized residuals greater than 3:"
+    })
+
+    output$no_residuals <- shiny::renderText({
+      "No individual has absolute standardized residuals greater than 3"
+    })
+
+    output$residual_table <- shiny::renderTable({
+      residual_table <- dataobject$summary |>
+        dplyr::mutate(
+          standardized_residuals = dataobject$residuals
+        ) |>
+        dplyr::filter(abs(standardized_residuals)>3) |>
+        dplyr::select(subject.id,
+                      standardized_residuals)
+      shiny::tagList(
+        residual_table)
+    })
+
+    #make plots of model
+
+    output$model_plots <- shiny::renderPlot({
+      req(dataobject$model)
+      par(mfrow = c(2,2))
+      plot(dataobject$model)
+
     })
   })
 }

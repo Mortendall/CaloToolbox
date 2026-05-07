@@ -501,3 +501,25 @@ boxplot_generator <- function(calr_summary,
   return(plotly_box)
 
 }
+
+#' Title
+#'
+#' @param parameter a parameter as a text string from a set list
+#'
+#' @returns a formula for modelling
+
+generate_formula <- function(parameter){
+  if(parameter == "energy balance"){
+    formula <- stats::as.formula("eb_mean~Total.Mass")
+  }
+  else if(parameter == "energy expenditure"){
+    formula <- stats::as.formula("ee_mean~Total.Mass")
+  }
+  else if(parameter == "vo2"){
+    formula <- stats::as.formula("vo2_mean~Total.Mass")
+  }
+  else{
+    formula <- stats::as.formula("feed_mean~Total.Mass")
+  }
+  return(formula)
+}

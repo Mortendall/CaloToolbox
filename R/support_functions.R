@@ -112,8 +112,9 @@ convert_to_calr <- function(calr_file, calr_headers) {
       exp.hour = floor(exp.hour),
       exp.day = floor(day - dplyr::first(day))
     ) |>
-    dplyr::select(tidyr::all_of(calr_headers[-1]))
-
+    dplyr::select(tidyr::all_of(calr_headers[-1])) |>
+    dplyr::ungroup() |>
+    dplyr::arrange(subject.id)
   return(long_sable)
 }
 
@@ -171,10 +172,10 @@ sem <- function(x) {
 trim_calr_data <- function(calr, session, group_info, resolution) {
   # remove ..1 col if it is there
 
-  if ("..1" %in% colnames(calr)) {
-    calr <- calr |>
-      dplyr::select(-"..1")
-  }
+   # if ("..1" %in% colnames(calr)) {
+   #   calr <- calr |>
+   #     dplyr::select(-"..1")
+   # }
 
   calr_trimmed <- calr |>
     dplyr::select(-c("cage", "xyamb", "wheel", "wheel.acc", "day", "hour", "C13", "body.temp")) |>

@@ -107,6 +107,7 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
             calr_file = raw_data,
             calr_headers = dataobject$calr_headers
           )
+
           dataobject$calr <- processed_data
 
           # determine resolution
@@ -233,6 +234,7 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           dataobject$group_info,
           dataobject$res
         )
+
 
         #calculate summary stats
         dataobject$summary <- generate_summary_data(

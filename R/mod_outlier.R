@@ -32,6 +32,18 @@ mod_outlier_ui <- function(id) {
               outputId = ns("process")
             )
           )
+        ),
+        bslib::card(
+          bslib::card_header(
+            "Load in example"
+          ),
+          bslib::card_body(
+            shinyWidgets::actionBttn(
+              inputId = ns("example"),
+              label = "Load in example data",
+              style = "jelly"
+            )
+          )
         )
       ),
       shiny::column(
@@ -83,6 +95,18 @@ mod_outlier_ui <- function(id) {
 mod_outlier_server <- function(id, parentsession, dataobject) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    #####Load example data####
+    shiny::observeEvent(
+      input$example,{
+        exampledata <- readRDS(here::here("data/calr_example.rds"))
+        dataobject$calr <- as.data.frame(exampledata$calr)
+        dataobject$session <- exampledata$session
+        dataobject$group_info <- as.data.frame(exampledata$group_info)
+        dataobject$res <- 3
+
+        shiny::showNotification("Succesfully loaded example data")
+      }
+    )
 
     ##### CalR upload####
     # register a calR file is uploaded
@@ -422,6 +446,9 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           shiny::uiOutput(
             outputId = ns("residual_test")
           ),
+           shiny::verbatimTextOutput(
+             outputId = ns("outlier_car_test")
+           ),
           shiny::plotOutput(
             outputId = ns("model_plots")
           )
@@ -465,6 +492,13 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
                       standardized_residuals)
       shiny::tagList(
         residual_table)
+    })
+
+    #make formal outliertest
+    output$outlier_car_test <- shiny::renderPrint({
+      req(dataobject$model)
+      outliertable <- car::outlierTest(dataobject$model)
+      outliertable
     })
 
     #make plots of model

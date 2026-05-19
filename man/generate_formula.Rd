@@ -2,7 +2,7 @@
 % Please edit documentation in R/support_functions.R
 \name{generate_formula}
 \alias{generate_formula}
-\title{Title}
+\title{Generate model formula}
 \usage{
 generate_formula(parameter)
 }
@@ -13,5 +13,5 @@ generate_formula(parameter)
 a formula for modelling
 }
 \description{
-Title
+Generate model formula
 }

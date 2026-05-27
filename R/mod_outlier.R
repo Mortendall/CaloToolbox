@@ -244,7 +244,7 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
       )
     })
 
-    # summarize data
+    ##### summarize data####
     shiny::observeEvent(
       input$process_start,
       {
@@ -329,11 +329,13 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
       }
     })
 
-    #Exclude subject when button is pressed
+    #####Exclude subject when button is pressed####
 
     shiny::observeEvent(
       input$exclude_individual,{
         dataobject$summary <- dataobject$summary |>
+          dplyr::filter(!subject.id == input$select_individual)
+        dataobject$circadian <- dataobject$circadian |>
           dplyr::filter(!subject.id == input$select_individual)
       }
     )

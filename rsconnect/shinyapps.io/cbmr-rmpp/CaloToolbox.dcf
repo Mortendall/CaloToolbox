@@ -1,0 +1,10 @@
+name: CaloToolbox
+title: CaloToolbox
+username: cbmr-rmpp
+account: cbmr-rmpp
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17405358
+bundleId: 12028028
+url: https://cbmr-rmpp.shinyapps.io/CaloToolbox/
+version: 1

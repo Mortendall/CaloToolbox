@@ -104,6 +104,36 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
         dataobject$group_info <- as.data.frame(exampledata$group_info)
         dataobject$res <- 3
 
+        #process data
+        #calculate resolution
+        res <- calculate_res(dataobject$calr)
+
+        #trim data, add circadian info, etc.
+        dataobject$calr_trimmed <- trim_calr_data(
+          dataobject$calr,
+          dataobject$session,
+          dataobject$group_info,
+          dataobject$res
+        )
+
+
+        #calculate summary stats
+        dataobject$summary <- generate_summary_data(
+          dataobject$calr_trimmed,
+          dataobject$session,
+          dataobject$group_info,
+          dataobject$res
+        )
+
+        #calculate circadian summary
+        dataobject$circadian <- circadian_summary(
+          dataobject$calr_trimmed,
+          dataobject$res
+        )
+
+        #pull colors from session
+        dataobject$color_key <- pull_colors(dataobject$session)
+
         shiny::showNotification("Succesfully loaded example data")
       }
     )

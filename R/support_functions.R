@@ -511,18 +511,34 @@ boxplot_generator <- function(calr_summary,
 #'
 #' @returns a formula for modelling
 
-generate_formula <- function(parameter){
-  if(parameter == "energy balance"){
-    formula <- stats::as.formula("eb_mean~Total.Mass")
-  }
-  else if(parameter == "energy expenditure"){
-    formula <- stats::as.formula("ee_mean~Total.Mass")
-  }
-  else if(parameter == "vo2"){
-    formula <- stats::as.formula("vo2_mean~Total.Mass")
+generate_formula <- function(parameter, by_group){
+  if(by_group == "~Total.mass"){
+    if(parameter == "energy balance"){
+      formula <- stats::as.formula("eb_mean~Total.Mass")
+    }
+    else if(parameter == "energy expenditure"){
+      formula <- stats::as.formula("ee_mean~Total.Mass")
+    }
+    else if(parameter == "vo2"){
+      formula <- stats::as.formula("vo2_mean~Total.Mass")
+    }
+    else{
+      formula <- stats::as.formula("feed_mean~Total.Mass")
+    }
   }
   else{
-    formula <- stats::as.formula("feed_mean~Total.Mass")
+    if(parameter == "energy balance"){
+    formula <- stats::as.formula("eb_mean~Total.Mass+group")
+  }
+  else if(parameter == "energy expenditure"){
+    formula <- stats::as.formula("ee_mean~Total.Mass+group")
+  }
+  else if(parameter == "vo2"){
+    formula <- stats::as.formula("vo2_mean~Total.Mass+group")
+  }
+  else{
+    formula <- stats::as.formula("feed_mean~Total.Mass+group")
+  }
   }
   return(formula)
 }
@@ -555,3 +571,89 @@ generate_formula <- function(parameter){
 #   color_key = color_key
 # )
 # saveRDS(calr_dummy, here::here("data/calr_example.rds"))
+
+
+#' trace plotter
+#'
+#' @param trimmed_calr trimmed calR object
+#' @param plot_parameter parameter from dataset to display
+#' @param y_text
+#'
+#' @returns a plotly plot
+
+trace_plotter <- function(trimmed_calr, plot_parameter, y_text) {
+  trace_plot <- ggplot2::ggplot(
+    trimmed_calr,
+    ggplot2::aes(
+      x = .data[["exp.minute"]]/60,
+      y = .data[[plot_parameter]],
+      color = .data[["subject.id"]],
+      hour = .data[["exp.hour"]]
+    )
+  ) +
+    ggplot2::geom_line(
+      size = 0.5,
+      ggplot2::aes(text = subject.id)
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq(0,
+                                             floor(max(trimmed_calr[["exp.minute"]]/24)),
+                                             12))+
+    ggplot2::theme_bw() +
+    ggplot2::xlab("Elapsed hours") +
+    ggplot2::ylab(y_text)
+
+  trace_plot <- plotly::ggplotly(trace_plot,
+                              tooltip = c("y", "hour", "text")
+  )
+
+  return(trace_plot)
+}
+
+#'  Extract min or max from select parameter
+#'
+#' @param calr_trimmed trimmed calr dataframe
+#' @param select_parameter select parameter to calculate from
+#' @param min_max either "min" or "max"
+#'
+#' @returns a value
+
+extract_value <- function(calr_trimmed, select_parameter, min_max){
+  if(select_parameter=="body mass"){
+    subset_data <- calr_trimmed |>
+      dplyr::pull(subject.mass)
+  }
+  else if(select_parameter=="RER"){
+    subset_data <- calr_trimmed |>
+      dplyr::pull(rer)
+  }
+  else if(select_parameter=="energy expenditure"){
+    subset_data <- calr_trimmed |>
+      dplyr::pull(ee)
+  }
+  else if(select_parameter=="energy balance"){
+    subset_data <- calr_trimmed |>
+      dplyr::pull(eb)
+  }
+  else if(select_parameter=="food intake"){
+    subset_data <- calr_trimmed |>
+      dplyr::pull(feed)
+  }
+  else{
+    subset_data <- calr_trimmed |>
+      dplyr::pull(vo2)
+  }
+
+  #extract minimum or maximum value
+  if (min_max == "min"){
+    result <- min(subset_data)
+    return(result)
+  }
+  else if(min_max == "max"){
+    result <- max(subset_data)
+    return(result)
+  }
+  else{
+    print("Please use either \"min\" or \"max\" in function")
+  }
+}
+

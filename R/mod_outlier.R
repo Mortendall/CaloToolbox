@@ -454,6 +454,12 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           label = "Run outlier test for select variable",
           style = "jelly"
         ),
+        shiny::radioButtons(
+          inputId = ns("by_group"),
+          label = "Select model",
+          choices = c("~Total.mass + group", "~Total.mass"),
+          selected = "~Total.mass"
+        ),
         #show result of outlier test
         shiny::uiOutput(
           outputId = ns("outliertest")
@@ -463,7 +469,10 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
 
     shiny::observeEvent(
       input$outlier_run,{
-        model_string <- generate_formula(input$select_parameter)
+        model_string <- generate_formula(input$select_parameter,
+                                         input$by_group)
+
+        print(model_string)
         dataobject$model <- lm(data = dataobject$summary,
                                formula = model_string)
         names(dataobject$model$residuals)<- dataobject$summary$subject.id

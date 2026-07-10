@@ -5,6 +5,6 @@ account: cbmr-rmpp
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17405358
-bundleId: 12028028
+bundleId: 12249099
 url: https://cbmr-rmpp.shinyapps.io/CaloToolbox/
 version: 1

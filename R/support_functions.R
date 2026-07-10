@@ -75,6 +75,13 @@ convert_to_calr <- function(calr_file, calr_headers) {
       values_from = "value"
     )
 
+  if (isFALSE("wheel" %in% colnames(long_sable))){
+    long_sable <- long_sable |>
+      dplyr::mutate(wheel = NA,
+                    wheel.acc = NA)
+  }
+
+
   long_sable <- long_sable |>
     # convert to more CalR resembling format
     dplyr::rename(
@@ -95,7 +102,7 @@ convert_to_calr <- function(calr_file, calr_headers) {
       enviro.sound = envirosound_1
     ) |>
     dplyr::group_by(cage) |>
-    dplyr::mutate(
+   dplyr::mutate(
       subject.id = as.character(cage),
       vo2 = vo2 * 60,
       # converts vo2 from ml/min to ml/h
@@ -105,18 +112,16 @@ convert_to_calr <- function(calr_file, calr_headers) {
       drink = drink.acc - dplyr::lag(drink.acc, default = 0),
       xytot = xbreak + ybreak,
       xyamb = NA,
-      wheel = wheel,
-      wheel.acc = wheel.acc,
       body.temp = -1,
       minute = lubridate::floor_date(Date.Time, unit = "minute"),
       hour = lubridate::floor_date(Date.Time, unit = "hour"),
       day = lubridate::floor_date(Date.Time, unit = "day"),
       exp.hour = floor(exp.hour),
-      exp.day = floor(day - dplyr::first(day))
-    ) |>
+      exp.day = floor(day - dplyr::first(day)))|>
     dplyr::select(tidyr::all_of(calr_headers[-1])) |>
     dplyr::ungroup() |>
     dplyr::arrange(subject.id)
+
   return(long_sable)
 }
 

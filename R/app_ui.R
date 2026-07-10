@@ -25,6 +25,11 @@ app_ui <- function(request) {
         title = "Outlier test",
         mod_outlier_ui("outlier_1"),
         value = "outlier"
+      ),
+      bslib::nav_panel(
+        title = "Trim sensor",
+        mod_sensor_trim_ui("sensor_trim_1"),
+        value = "sensor"
       )
 
 

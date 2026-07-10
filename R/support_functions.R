@@ -105,8 +105,8 @@ convert_to_calr <- function(calr_file, calr_headers) {
       drink = drink.acc - dplyr::lag(drink.acc, default = 0),
       xytot = xbreak + ybreak,
       xyamb = NA,
-      wheel = NA,
-      wheel.acc = NA,
+      wheel = wheel,
+      wheel.acc = wheel.acc,
       body.temp = -1,
       minute = lubridate::floor_date(Date.Time, unit = "minute"),
       hour = lubridate::floor_date(Date.Time, unit = "hour"),
@@ -180,7 +180,7 @@ trim_calr_data <- function(calr, session, group_info, resolution) {
    # }
 
   calr_trimmed <- calr |>
-    dplyr::select(-c("cage", "xyamb", "wheel", "wheel.acc", "day", "hour", "C13", "body.temp")) |>
+    dplyr::select(-c("cage", "xyamb", "day", "hour", "C13", "body.temp")) |>
     dplyr::mutate(subject.id = as.character(subject.id)) |>
     dplyr::left_join(group_info) |>
     # change to character if group is numeric
@@ -657,3 +657,30 @@ extract_value <- function(calr_trimmed, select_parameter, min_max){
   }
 }
 
+
+#' Extract paramter
+#'
+#' @param select_parameter input from selectize_input
+#'
+#' @returns a string with a col name
+
+extract_variable <- function(select_parameter){
+  if(select_parameter=="body mass"){
+    return("subject.mass")
+    }
+  else if(select_parameter=="RER"){
+    return("rer")
+  }
+  else if(select_parameter=="energy expenditure"){
+    return("ee")
+  }
+  else if(select_parameter=="energy balance"){
+    return("eb")
+  }
+  else if(select_parameter=="food intake"){
+    return("feed")
+  }
+  else{
+    return("vo2")
+  }
+}

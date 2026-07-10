@@ -471,8 +471,6 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
       input$outlier_run,{
         model_string <- generate_formula(input$select_parameter,
                                          input$by_group)
-
-        print(model_string)
         dataobject$model <- lm(data = dataobject$summary,
                                formula = model_string)
         names(dataobject$model$residuals)<- dataobject$summary$subject.id

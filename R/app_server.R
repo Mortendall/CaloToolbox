@@ -10,4 +10,5 @@ app_server <- function(input, output, session) {
   dataobject$calr_headers <- readRDS(here::here("data/calr_headers.rds"))
   mod_welcome_server("welcome_1", parentsession)
   mod_outlier_server("outlier_1", parentsession, dataobject)
+  mod_sensor_trim_server("sensor_trim_1", parentsession, dataobject)
 }

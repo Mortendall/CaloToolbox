@@ -227,6 +227,7 @@ trim_calr_data <- function(calr, session, group_info, resolution) {
     ) |>
     dplyr::ungroup()
 
+
   # add light cycle
 
   calr_trimmed <- calr_trimmed |>

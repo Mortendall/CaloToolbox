@@ -117,6 +117,7 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
         )
 
 
+
         #calculate summary stats
         dataobject$summary <- generate_summary_data(
           dataobject$calr_trimmed,
@@ -219,8 +220,15 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
 
         # check csv is right format
         if (all(c("group_names", "diet_names", "dietCal") %in% colnames(session_file))) {
+          #check if other_food option is has been used
+          if("othr_dietCal" %in% colnames(session_file)){
+            session_file <- session_file |>
+              dplyr::mutate(dietCal = othr_dietCal)
+          }
+
           # save session file
           dataobject$session <- session_file
+
 
           # add groups
           dataobject$group_info <- group_assigner(session_file)
@@ -288,6 +296,7 @@ mod_outlier_server <- function(id, parentsession, dataobject) {
           dataobject$group_info,
           dataobject$res
         )
+
 
 
         #calculate summary stats
